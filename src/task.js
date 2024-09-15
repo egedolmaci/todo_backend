@@ -1,4 +1,5 @@
 import { pool } from "./db.js";
+import { updateTask } from "./task-utils.js";
 
 const getTasks = async (req, res, next) => {
   try {
@@ -36,6 +37,31 @@ const addTask = async (req, res, next) => {
   }
 };
 
+const updateTaskByTitle = async (req, res, next) => {
+  const title = req.params.title;
+  console.log(title);
+
+  try {
+    const results = await pool.query(
+      "select status from tasks where title = $1",
+      [title],
+    );
+    console.log(results.rows);
+
+    const task_status = updateTask(results.rows[0].status);
+
+    pool.query("update tasks set status = $1 where title = $2", [
+      task_status,
+      title,
+    ]);
+    // const new_status = updateTask(results.rows);
+
+    res.status(200).send(`task with title ${title} has been updated`);
+  } catch (error) {
+    next(error);
+  }
+};
+
 const deleteTaskById = async (req, res, next) => {
   const task_id = req.params.id;
 
@@ -53,4 +79,4 @@ const deleteTaskById = async (req, res, next) => {
   }
 };
 
-export { getTasks, addTask, deleteTaskById };
+export { getTasks, addTask, deleteTaskById, updateTaskByTitle };
